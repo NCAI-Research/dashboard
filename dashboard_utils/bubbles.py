@@ -36,6 +36,7 @@ def get_profiles(serialized_data_points):
 
 
 def get_serialized_data_points():
+
     api = wandb.Api()
     runs = api.runs(WANDB_REPO)
 
@@ -45,7 +46,7 @@ def get_serialized_data_points():
     for run in runs:
         run_summary = run.summary._json_dict
         run_name = run.name
-        
+
         if run_name in serialized_data_points:
             try:
                 timestamp = run_summary["_timestamp"]

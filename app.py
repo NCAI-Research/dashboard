@@ -1,13 +1,12 @@
-import json
-
 import streamlit as st
+import wandb
 from streamlit_observable import observable
 
 from dashboard_utils.bubbles import get_new_bubble_data
 
 st.title("Training transformers together dashboard")
 st.write("test")
-
+wandb.login(anonymous="must")
 
 serialized_data, profiles = get_new_bubble_data()
 

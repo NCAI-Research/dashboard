@@ -1,13 +1,16 @@
 import datetime
 from urllib import parse
 
+from concurrent.futures import as_completed
+from requests_futures.sessions import FuturesSession
 import requests
 import wandb
+from dashboard_utils.time_tracker import simple_time_tracker, _log
 
 URL_QUICKSEARCH = "https://huggingface.co/api/quicksearch?"
 WANDB_REPO = "learning-at-home/Worker_logs"
 
-
+@simple_time_tracker(_log)
 def get_new_bubble_data():
     serialized_data_points, latest_timestamp = get_serialized_data_points()
     serialized_data = get_serialized_data(serialized_data_points, latest_timestamp)
@@ -15,26 +18,38 @@ def get_new_bubble_data():
 
     return serialized_data, profiles
 
-
+@simple_time_tracker(_log)
 def get_profiles(serialized_data_points):
     profiles = []
-    for username in serialized_data_points.keys():
-        params = {"type": "user", "q": username}
-        new_url = URL_QUICKSEARCH + parse.urlencode(params)
-        r = requests.get(new_url)
-        response = r.json()
-        try:
-            avatarUrl = response["users"][0]["avatarUrl"]
-        except:
-            avatarUrl = "/avatars/57584cb934354663ac65baa04e6829bf.svg"
-        if avatarUrl.startswith("/avatars/"):
-            avatarUrl = f"https://huggingface.co{avatarUrl}"
-        profiles.append(
-            {"id": username, "name": username, "src": avatarUrl, "url": f"https://huggingface.co/{username}"}
-        )
+    anonymous_taken = False
+    with FuturesSession() as session:
+        futures=[]
+        for username in serialized_data_points.keys():
+            future = session.get(URL_QUICKSEARCH + parse.urlencode({"type": "user", "q": username}))
+            future.username = username
+            futures.append(future)
+        for future in as_completed(futures):
+            resp = future.result()
+            username = future.username
+            response = resp.json()
+            avatarUrl = None
+            if response["users"]:
+                for user_candidate in response["users"]:
+                    if user_candidate['user'] == username:
+                        avatarUrl = response["users"][0]["avatarUrl"]
+                        break
+            if not avatarUrl:
+                avatarUrl = "/avatars/57584cb934354663ac65baa04e6829bf.svg"
+
+            if avatarUrl.startswith("/avatars/"):
+                avatarUrl = f"https://huggingface.co{avatarUrl}"
+
+            profiles.append(
+                {"id": username, "name": username, "src": avatarUrl, "url": f"https://huggingface.co/{username}"}
+            )
     return profiles
 
-
+@simple_time_tracker(_log)
 def get_serialized_data_points():
 
     api = wandb.Api()
@@ -42,7 +57,6 @@ def get_serialized_data_points():
 
     serialized_data_points = {}
     latest_timestamp = None
-    print("**start api call")
     for run in runs:
         run_summary = run.summary._json_dict
         run_name = run.name
@@ -87,10 +101,9 @@ def get_serialized_data_points():
                 # print(e)
                 # print([key for key in list(run_summary.keys()) if "gradients" not in key])
     latest_timestamp = datetime.datetime.utcfromtimestamp(latest_timestamp)
-    print("**finish api call")
     return serialized_data_points, latest_timestamp
 
-
+@simple_time_tracker(_log)
 def get_serialized_data(serialized_data_points, latest_timestamp):
     serialized_data_points_v2 = []
     max_velocity = 1

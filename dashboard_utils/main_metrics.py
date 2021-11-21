@@ -1,7 +1,9 @@
-from dashboard_utils.time_tracker import simple_time_tracker, _log
 import wandb
 
+from dashboard_utils.time_tracker import _log, simple_time_tracker
+
 WANDB_REPO = "learning-at-home/Main_metrics"
+
 
 @simple_time_tracker(_log)
 def get_main_metrics():

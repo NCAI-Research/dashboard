@@ -1,14 +1,15 @@
 import datetime
+from concurrent.futures import as_completed
 from urllib import parse
 
-from concurrent.futures import as_completed
-from requests_futures.sessions import FuturesSession
-import requests
 import wandb
-from dashboard_utils.time_tracker import simple_time_tracker, _log
+from requests_futures.sessions import FuturesSession
+
+from dashboard_utils.time_tracker import _log, simple_time_tracker
 
 URL_QUICKSEARCH = "https://huggingface.co/api/quicksearch?"
 WANDB_REPO = "learning-at-home/Worker_logs"
+
 
 @simple_time_tracker(_log)
 def get_new_bubble_data():
@@ -18,12 +19,12 @@ def get_new_bubble_data():
 
     return serialized_data, profiles
 
+
 @simple_time_tracker(_log)
 def get_profiles(serialized_data_points):
     profiles = []
-    anonymous_taken = False
     with FuturesSession() as session:
-        futures=[]
+        futures = []
         for username in serialized_data_points.keys():
             future = session.get(URL_QUICKSEARCH + parse.urlencode({"type": "user", "q": username}))
             future.username = username
@@ -35,7 +36,7 @@ def get_profiles(serialized_data_points):
             avatarUrl = None
             if response["users"]:
                 for user_candidate in response["users"]:
-                    if user_candidate['user'] == username:
+                    if user_candidate["user"] == username:
                         avatarUrl = response["users"][0]["avatarUrl"]
                         break
             if not avatarUrl:
@@ -48,6 +49,7 @@ def get_profiles(serialized_data_points):
                 {"id": username, "name": username, "src": avatarUrl, "url": f"https://huggingface.co/{username}"}
             )
     return profiles
+
 
 @simple_time_tracker(_log)
 def get_serialized_data_points():
@@ -62,7 +64,7 @@ def get_serialized_data_points():
         run_name = run.name
 
         if run_name in serialized_data_points:
-            try:
+            if "_timestamp" in run_summary and "_step" in run_summary:
                 timestamp = run_summary["_timestamp"]
                 serialized_data_points[run_name]["Runs"].append(
                     {
@@ -75,12 +77,8 @@ def get_serialized_data_points():
                 )
                 if not latest_timestamp or timestamp > latest_timestamp:
                     latest_timestamp = timestamp
-            except Exception as e:
-                pass
-                # print(e)
-                # print([key for key in list(run_summary.keys()) if "gradients" not in key])
         else:
-            try:
+            if "_timestamp" in run_summary and "_step" in run_summary:
                 timestamp = run_summary["_timestamp"]
                 serialized_data_points[run_name] = {
                     "profileId": run_name,
@@ -96,12 +94,9 @@ def get_serialized_data_points():
                 }
                 if not latest_timestamp or timestamp > latest_timestamp:
                     latest_timestamp = timestamp
-            except Exception as e:
-                pass
-                # print(e)
-                # print([key for key in list(run_summary.keys()) if "gradients" not in key])
     latest_timestamp = datetime.datetime.utcfromtimestamp(latest_timestamp)
     return serialized_data_points, latest_timestamp
+
 
 @simple_time_tracker(_log)
 def get_serialized_data(serialized_data_points, latest_timestamp):

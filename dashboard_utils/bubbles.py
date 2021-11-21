@@ -127,8 +127,6 @@ def get_serialized_data(serialized_data_points, latest_timestamp):
             "profileId": run_name,
             "batches": batches,
             "runtime": runtime,
-            "loss": loss,
-            "velocity": velocity,
             "activeRuns": activeRuns,
         }
         serialized_data_points_v2.append(new_item)

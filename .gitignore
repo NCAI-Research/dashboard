@@ -4,4 +4,7 @@ streamlit_observable/frontend/src/*
 streamlit_observable/frontend/.env*
 streamlit_observable/frontend/.prettierrc*
 streamlit_observable/frontend/package.json*
+streamlit_observable/frontend/package-lock.json*
 streamlit_observable/frontend/tsconfig.json*
+
+*__pycache__*

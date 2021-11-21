@@ -1,6 +1,8 @@
 from dashboard_utils.main_metrics import get_main_metrics
 import streamlit as st
 import wandb
+import pandas as pd
+import altair as alt
 from streamlit_observable import observable
 
 from dashboard_utils.bubbles import get_new_bubble_data
@@ -11,8 +13,15 @@ st.title("Training transformers together dashboard")
 st.header("Training Loss")
 
 steps, losses, alive_peers = get_main_metrics()
+source = pd.DataFrame({
+  "steps": steps, "loss":losses, "alive participants":alive_peers
+})
 
-st.line_chart(data={"steps": steps, "loss":losses})
+chart_loss = alt.Chart(source).mark_line().encode(
+    x='steps',
+    y='loss'
+)
+st.altair_chart(chart_loss)
 
 st.header("Collaborative training participants")
 st.header("Snapshot")
@@ -25,4 +34,8 @@ observers = observable(
 )
 
 st.header("Overtime")
-st.line_chart(data={"steps": steps, "alive participants":alive_peers})
+chart_alive_peer = alt.Chart(source).mark_line().encode(
+    x='steps',
+    y='alive participants'
+)
+st.altair_chart(chart_alive_peer)

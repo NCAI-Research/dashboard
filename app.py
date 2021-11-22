@@ -1,4 +1,3 @@
-import altair as alt
 import pandas as pd
 import streamlit as st
 import wandb
@@ -7,9 +6,12 @@ from dashboard_utils.bubbles import get_new_bubble_data
 from dashboard_utils.main_metrics import get_main_metrics
 from streamlit_observable import observable
 
+# Only need to set these here as we are add controls outside of Hydralit, to customise a run Hydralit!
+st.set_page_config(page_title="Dashboard", layout="centered")
+
 wandb.login(anonymous="must")
 
-st.title("Training transformers together dashboard")
+st.markdown("<h1 style='text-align: center;'>Dashboard</h1>", unsafe_allow_html=True)
 st.caption("Training Loss")
 
 steps, dates, losses, alive_peers = get_main_metrics()
@@ -58,10 +60,9 @@ st.vega_lite_chart(
 
 st.header("Collaborative training participants")
 serialized_data, profiles = get_new_bubble_data()
-with st.spinner("Wait for it..."):
-    observers = observable(
-        "Participants",
-        notebook="d/9ae236a507f54046",  # "@huggingface/participants-bubbles-chart",
-        targets=["c_noaws"],
-        redefine={"serializedData": serialized_data, "profileSimple": profiles},
-    )
+observable(
+    "Participants",
+    notebook="d/9ae236a507f54046",  # "@huggingface/participants-bubbles-chart",
+    targets=["c_noaws"],
+    redefine={"serializedData": serialized_data, "profileSimple": profiles},
+)

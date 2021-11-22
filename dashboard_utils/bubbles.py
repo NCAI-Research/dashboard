@@ -3,6 +3,7 @@ import json
 from concurrent.futures import as_completed
 from urllib import parse
 
+import streamlit as st
 import wandb
 from requests_futures.sessions import FuturesSession
 
@@ -10,12 +11,13 @@ from dashboard_utils.time_tracker import _log, simple_time_tracker
 
 URL_QUICKSEARCH = "https://huggingface.co/api/quicksearch?"
 WANDB_REPO = "learning-at-home/Worker_logs"
+CACHE_TTL = 100
 
 
+@st.cache(ttl=CACHE_TTL)
 @simple_time_tracker(_log)
 def get_new_bubble_data():
-    # serialized_data_points, latest_timestamp = get_serialized_data_points()
-    serialized_data_points, latest_timestamp = None, None
+    serialized_data_points, latest_timestamp = get_serialized_data_points()
     serialized_data = get_serialized_data(serialized_data_points, latest_timestamp)
 
     usernames = []
@@ -27,6 +29,7 @@ def get_new_bubble_data():
     return serialized_data, profiles
 
 
+@st.cache(ttl=CACHE_TTL)
 @simple_time_tracker(_log)
 def get_profiles(usernames):
     profiles = []
@@ -58,6 +61,7 @@ def get_profiles(usernames):
     return profiles
 
 
+@st.cache(ttl=CACHE_TTL)
 @simple_time_tracker(_log)
 def get_serialized_data_points():
 
@@ -105,38 +109,39 @@ def get_serialized_data_points():
     return serialized_data_points, latest_timestamp
 
 
+@st.cache(ttl=CACHE_TTL)
 @simple_time_tracker(_log)
 def get_serialized_data(serialized_data_points, latest_timestamp):
-    # serialized_data_points_v2 = []
-    # max_velocity = 1
-    # for run_name, serialized_data_point in serialized_data_points.items():
-    #     activeRuns = []
-    #     loss = 0
-    #     runtime = 0
-    #     batches = 0
-    #     velocity = 0
-    #     for run in serialized_data_point["Runs"]:
-    #         if run["date"] == latest_timestamp:
-    #             run["date"] = run["date"].isoformat()
-    #             activeRuns.append(run)
-    #             loss += run["loss"]
-    #             velocity += run["velocity"]
-    #         loss = loss / len(activeRuns) if activeRuns else 0
-    #         runtime += run["runtime"]
-    #         batches += run["batches"]
-    #     new_item = {
-    #         "date": latest_timestamp.isoformat(),
-    #         "profileId": run_name,
-    #         "batches": batches,
-    #         "runtime": runtime,
-    #         "activeRuns": activeRuns,
-    #     }
-    #     serialized_data_points_v2.append(new_item)
-    # serialized_data = {"points": [serialized_data_points_v2], "maxVelocity": max_velocity}
-    with open(
-        "/mnt/storage/Documents/hugging_face/colaborative_hub_training/demo_neurips/training-transformers-together-dashboard/data/"
-        "serializaledata_V2.json",
-        "r",
-    ) as f:
-        serialized_data = json.load(f)
+    serialized_data_points_v2 = []
+    max_velocity = 1
+    for run_name, serialized_data_point in serialized_data_points.items():
+        activeRuns = []
+        loss = 0
+        runtime = 0
+        batches = 0
+        velocity = 0
+        for run in serialized_data_point["Runs"]:
+            if run["date"] == latest_timestamp:
+                run["date"] = run["date"].isoformat()
+                activeRuns.append(run)
+                loss += run["loss"]
+                velocity += run["velocity"]
+            loss = loss / len(activeRuns) if activeRuns else 0
+            runtime += run["runtime"]
+            batches += run["batches"]
+        new_item = {
+            "date": latest_timestamp.isoformat(),
+            "profileId": run_name,
+            "batches": batches,
+            "runtime": runtime,
+            "activeRuns": activeRuns,
+        }
+        serialized_data_points_v2.append(new_item)
+    serialized_data = {"points": [serialized_data_points_v2], "maxVelocity": max_velocity}
+    # with open(
+    #     "/mnt/storage/Documents/hugging_face/colaborative_hub_training/demo_neurips/training-transformers-together-dashboard/data/"
+    #     "serializaledata_V2.json",
+    #     "r",
+    # ) as f:
+    #     serialized_data = json.load(f)
     return serialized_data

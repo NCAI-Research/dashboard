@@ -2,6 +2,7 @@ import datetime
 from concurrent.futures import as_completed
 from urllib import parse
 
+import streamlit as st
 import wandb
 from requests_futures.sessions import FuturesSession
 
@@ -9,23 +10,31 @@ from dashboard_utils.time_tracker import _log, simple_time_tracker
 
 URL_QUICKSEARCH = "https://huggingface.co/api/quicksearch?"
 WANDB_REPO = "learning-at-home/Worker_logs"
+CACHE_TTL = 100
 
 
+@st.cache(ttl=CACHE_TTL)
 @simple_time_tracker(_log)
 def get_new_bubble_data():
     serialized_data_points, latest_timestamp = get_serialized_data_points()
     serialized_data = get_serialized_data(serialized_data_points, latest_timestamp)
-    profiles = get_profiles(serialized_data_points)
+
+    usernames = []
+    for item in serialized_data["points"][0]:
+        usernames.append(item["profileId"])
+
+    profiles = get_profiles(usernames)
 
     return serialized_data, profiles
 
 
+@st.cache(ttl=CACHE_TTL)
 @simple_time_tracker(_log)
-def get_profiles(serialized_data_points):
+def get_profiles(usernames):
     profiles = []
     with FuturesSession() as session:
         futures = []
-        for username in serialized_data_points.keys():
+        for username in usernames:
             future = session.get(URL_QUICKSEARCH + parse.urlencode({"type": "user", "q": username}))
             future.username = username
             futures.append(future)
@@ -51,6 +60,7 @@ def get_profiles(serialized_data_points):
     return profiles
 
 
+@st.cache(ttl=CACHE_TTL)
 @simple_time_tracker(_log)
 def get_serialized_data_points():
 
@@ -98,6 +108,7 @@ def get_serialized_data_points():
     return serialized_data_points, latest_timestamp
 
 
+@st.cache(ttl=CACHE_TTL)
 @simple_time_tracker(_log)
 def get_serialized_data(serialized_data_points, latest_timestamp):
     serialized_data_points_v2 = []

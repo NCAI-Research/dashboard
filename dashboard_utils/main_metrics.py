@@ -1,12 +1,15 @@
 import datetime
 
+import streamlit as st
 import wandb
 
 from dashboard_utils.time_tracker import _log, simple_time_tracker
 
 WANDB_REPO = "learning-at-home/Main_metrics"
+CACHE_TTL = 100
 
 
+@st.cache(ttl=CACHE_TTL)
 @simple_time_tracker(_log)
 def get_main_metrics():
     api = wandb.Api()

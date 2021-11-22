@@ -12,15 +12,49 @@ wandb.login(anonymous="must")
 st.title("Training transformers together dashboard")
 st.caption("Training Loss")
 
-steps, losses, alive_peers = get_main_metrics()
-source = pd.DataFrame({"steps": steps, "loss": losses, "alive participants": alive_peers})
+steps, dates, losses, alive_peers = get_main_metrics()
+source = pd.DataFrame({"steps": steps, "loss": losses, "alive participants": alive_peers, "date": dates})
 
-chart_loss = alt.Chart(source).mark_line().encode(x="steps", y="loss")
-st.altair_chart(chart_loss, use_container_width=True)
 
-st.caption("Number of alive participants over time")
-chart_alive_peer = alt.Chart(source).mark_line().encode(x="steps", y="alive participants")
-st.altair_chart(chart_alive_peer, use_container_width=True)
+st.vega_lite_chart(
+    source,
+    {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "description": "Training Loss",
+        "mark": {"type": "line", "point": {"tooltip": True, "filled": False, "strokeOpacity": 0}},
+        "encoding": {"x": {"field": "date", "type": "temporal"}, "y": {"field": "loss", "type": "quantitative"}},
+        "config": {"axisX": {"labelAngle": -40}},
+    },
+    use_container_width=True,
+)
+
+st.caption("Number of alive runs over time")
+st.vega_lite_chart(
+    source,
+    {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "description": "Alive participants",
+        "mark": {"type": "line", "point": {"tooltip": True, "filled": False, "strokeOpacity": 0}},
+        "encoding": {
+            "x": {"field": "date", "type": "temporal"},
+            "y": {"field": "alive participants", "type": "quantitative"},
+        },
+        "config": {"axisX": {"labelAngle": -40}},
+    },
+    use_container_width=True,
+)
+st.caption("Number of steps")
+st.vega_lite_chart(
+    source,
+    {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "description": "Training Loss",
+        "mark": {"type": "line", "point": {"tooltip": True, "filled": False, "strokeOpacity": 0}},
+        "encoding": {"x": {"field": "date", "type": "temporal"}, "y": {"field": "steps", "type": "quantitative"}},
+        "config": {"axisX": {"labelAngle": -40}},
+    },
+    use_container_width=True,
+)
 
 st.header("Collaborative training participants")
 serialized_data, profiles = get_new_bubble_data()

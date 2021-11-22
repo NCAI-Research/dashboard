@@ -1,5 +1,5 @@
 ---
-title: Training transformers together dashboard
+title: Dashboard
 emoji: 🌐
 colorFrom: blue
 colorTo: red

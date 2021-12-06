@@ -2,6 +2,8 @@ import datetime
 from concurrent.futures import as_completed
 from urllib import parse
 
+import pandas as pd
+
 import streamlit as st
 import wandb
 from requests_futures.sessions import FuturesSession
@@ -138,3 +140,38 @@ def get_serialized_data(serialized_data_points, latest_timestamp):
         serialized_data_points_v2.append(new_item)
     serialized_data = {"points": [serialized_data_points_v2], "maxVelocity": max_velocity}
     return serialized_data
+
+def get_leaderboard(serialized_data):
+    data_leaderboard = {
+        "user": [],
+        "runtime": []
+    }
+
+    for user_item in serialized_data["points"][0]:
+        data_leaderboard["user"].append(user_item["profileId"])
+        data_leaderboard["runtime"].append(user_item["runtime"])
+    
+    df = pd.DataFrame(data_leaderboard)
+    df = df.sort_values("runtime", ascending=False)
+    df["runtime"] = df["runtime"].apply(lambda x: datetime.timedelta(seconds=x))
+    df["runtime"] = df["runtime"].apply(lambda x: str(x))
+
+    df.reset_index(drop=True, inplace=True)
+    df.rename(columns={"user": "User", "runtime": "Total time contributed"}, inplace=True)
+    df["Rank"] = df.index + 1
+    df = df.set_index('Rank')
+    return df
+
+def get_global_metrics(serialized_data):
+    num_contributing_users = len(serialized_data["points"][0])
+    num_active_users = 0
+    total_runtime = 0
+
+    for user_item in serialized_data["points"][0]:
+        if user_item["activeRuns"] != []:
+            num_active_users += 1
+        total_runtime += user_item["runtime"]
+    
+    total_runtime = datetime.timedelta(seconds=total_runtime)
+    return {"num_contributing_users": num_contributing_users, "num_active_users": num_active_users, "total_runtime": total_runtime}
+    

@@ -74,10 +74,14 @@ with chart_c2:
     placeholder_chart_c2_1 = st.empty()
     with placeholder_chart_c2_1:
         st_lottie(lottie_loading, height=100, key="loading_c2_1")
+    
+    st.write("Chart showing participants of the collaborative-training. Circle radius is relative to the total number of "
+    "processed batches, the circle is greyed if the participant is not active. Every purple square represents an "
+    "active device, darker color corresponds to higher performance.")
 
     st.caption("Leaderboard")
-    placeholder_chart_c2_2 = st.empty()
-    with placeholder_chart_c2_2:
+    placeholder_chart_c2_3 = st.empty()
+    with placeholder_chart_c2_3:
         st_lottie(lottie_loading, height=100, key="loading_c2_2")
 
 
@@ -134,14 +138,13 @@ observable(
     targets=["c_noaws"],
     redefine={"serializedData": serialized_data, "profileSimple": profiles, "width": 0},
 )
-placeholder_chart_c2_2.dataframe(df_leaderboard[["User", "Total time contributed"]])
+placeholder_chart_c2_3.dataframe(df_leaderboard[["User", "Total time contributed"]])
 
 global_metrics = get_global_metrics(serialized_data)
 
 placeholder_key_figures_c1.write(f"<b>{global_metrics['num_contributing_users']}</b>", unsafe_allow_html=True)
 placeholder_key_figures_c2.write(f"<b>{global_metrics['num_active_users']}</b>", unsafe_allow_html=True)
 placeholder_key_figures_c3.write(f"<b>{global_metrics['total_runtime']}</b>", unsafe_allow_html=True)
-
 
 with placeholder_chart_c2_1:
     observable(

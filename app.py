@@ -76,8 +76,8 @@ with chart_c2:
         st_lottie(lottie_loading, height=100, key="loading_c2_1")
     
     st.write("Chart showing participants of the collaborative-training. Circle radius is relative to the total number of "
-    "processed batches, the circle is greyed if the participant is not active. Every purple square represents an "
-    "active device, darker color corresponds to higher performance.")
+    "processed batches, the profile picture is circled in purple if the participant is active. Every purple square represents an "
+    "active device.")
 
     st.caption("Leaderboard")
     placeholder_chart_c2_3 = st.empty()

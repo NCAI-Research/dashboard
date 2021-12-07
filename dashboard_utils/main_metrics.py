@@ -5,7 +5,7 @@ import wandb
 
 from dashboard_utils.time_tracker import _log, simple_time_tracker
 
-WANDB_REPO = st.secrets["WANDB_REPO_MAIN_METRICS"] 
+WANDB_RUN_URL = st.secrets["WANDB_RUN_URL_MAIN_METRICS"] 
 CACHE_TTL = 100
 
 
@@ -13,8 +13,7 @@ CACHE_TTL = 100
 @simple_time_tracker(_log)
 def get_main_metrics():
     api = wandb.Api()
-    runs = api.runs(WANDB_REPO)
-    run = runs[0]
+    run = api.run(WANDB_RUN_URL)
     history = run.scan_history(keys=["step", "loss", "alive peers", "_timestamp"])
 
     steps = []

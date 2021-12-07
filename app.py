@@ -108,7 +108,7 @@ placeholder_chart_c1_2.vega_lite_chart(
     source,
     {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-        "description": "Alive participants",
+        "description": "Alive sessions",
         "mark": {"type": "line", "point": {"tooltip": True, "filled": False, "strokeOpacity": 0}},
         "encoding": {
             "x": {"field": "date", "type": "temporal"},

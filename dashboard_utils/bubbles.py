@@ -11,7 +11,7 @@ from requests_futures.sessions import FuturesSession
 from dashboard_utils.time_tracker import _log, simple_time_tracker
 
 URL_QUICKSEARCH = "https://huggingface.co/api/quicksearch?"
-WANDB_REPO = "learning-at-home/Worker_logs"
+WANDB_REPO = st.secrets["WANDB_REPO_INDIVIDUAL_METRICS"]  
 CACHE_TTL = 100
 MAX_DELTA_ACTIVE_RUN_SEC = 60 * 5
 

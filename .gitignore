@@ -1,10 +1,10 @@
 streamlit_observable/frontend/node_modules/*
 streamlit_observable/frontend/public/*
-streamlit_observable/frontend/src/*
 streamlit_observable/frontend/.env*
 streamlit_observable/frontend/.prettierrc*
 streamlit_observable/frontend/package.json*
 streamlit_observable/frontend/package-lock.json*
 streamlit_observable/frontend/tsconfig.json*
-
+streamlit_observable/frontend/src/observable_code*
+.streamlit/secrets.toml*
 *__pycache__*

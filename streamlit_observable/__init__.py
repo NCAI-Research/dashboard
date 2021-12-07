@@ -15,7 +15,7 @@ else:
     _component_func = components.declare_component("observable", path=build_dir)
 
 
-def observable(key, notebook, targets=None, redefine={}, observe=[], hide=[]):
+def observable(key, notebook, targets=None, redefine={}, observe=[], hide=[], render_empty=False):
     """Create a new instance of "observable".
 
     Parameters
@@ -49,7 +49,7 @@ def observable(key, notebook, targets=None, redefine={}, observe=[], hide=[]):
 
     """
     component_value = _component_func(
-        notebook=notebook, targets=targets, observe=observe, redefine=redefine, hide=hide, key=key, name=key
+        notebook=notebook, targets=targets, observe=observe, redefine=redefine, hide=hide, render_empty=render_empty, key=key, name=key
     )
 
     if component_value is None:

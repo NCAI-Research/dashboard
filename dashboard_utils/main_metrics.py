@@ -9,7 +9,7 @@ WANDB_REPO = "learning-at-home/Main_metrics"
 CACHE_TTL = 100
 
 
-@st.cache(ttl=CACHE_TTL)
+@st.cache(ttl=CACHE_TTL, show_spinner=False)
 @simple_time_tracker(_log)
 def get_main_metrics():
     api = wandb.Api()

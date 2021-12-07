@@ -2,6 +2,8 @@ import datetime
 from concurrent.futures import as_completed
 from urllib import parse
 
+import pandas as pd
+
 import streamlit as st
 import wandb
 from requests_futures.sessions import FuturesSession
@@ -11,9 +13,10 @@ from dashboard_utils.time_tracker import _log, simple_time_tracker
 URL_QUICKSEARCH = "https://huggingface.co/api/quicksearch?"
 WANDB_REPO = "learning-at-home/Worker_logs"
 CACHE_TTL = 100
+MAX_DELTA_ACTIVE_RUN_SEC = 60 * 5
 
 
-@st.cache(ttl=CACHE_TTL)
+@st.cache(ttl=CACHE_TTL, show_spinner=False)
 @simple_time_tracker(_log)
 def get_new_bubble_data():
     serialized_data_points, latest_timestamp = get_serialized_data_points()
@@ -28,7 +31,7 @@ def get_new_bubble_data():
     return serialized_data, profiles
 
 
-@st.cache(ttl=CACHE_TTL)
+@st.cache(ttl=CACHE_TTL, show_spinner=False)
 @simple_time_tracker(_log)
 def get_profiles(usernames):
     profiles = []
@@ -60,7 +63,7 @@ def get_profiles(usernames):
     return profiles
 
 
-@st.cache(ttl=CACHE_TTL)
+@st.cache(ttl=CACHE_TTL, show_spinner=False)
 @simple_time_tracker(_log)
 def get_serialized_data_points():
 
@@ -108,7 +111,7 @@ def get_serialized_data_points():
     return serialized_data_points, latest_timestamp
 
 
-@st.cache(ttl=CACHE_TTL)
+@st.cache(ttl=CACHE_TTL, show_spinner=False)
 @simple_time_tracker(_log)
 def get_serialized_data(serialized_data_points, latest_timestamp):
     serialized_data_points_v2 = []
@@ -138,3 +141,46 @@ def get_serialized_data(serialized_data_points, latest_timestamp):
         serialized_data_points_v2.append(new_item)
     serialized_data = {"points": [serialized_data_points_v2], "maxVelocity": max_velocity}
     return serialized_data
+
+
+def get_leaderboard(serialized_data):
+    data_leaderboard = {"user": [], "runtime": []}
+
+    for user_item in serialized_data["points"][0]:
+        data_leaderboard["user"].append(user_item["profileId"])
+        data_leaderboard["runtime"].append(user_item["runtime"])
+
+    df = pd.DataFrame(data_leaderboard)
+    df = df.sort_values("runtime", ascending=False)
+    df["runtime"] = df["runtime"].apply(lambda x: datetime.timedelta(seconds=x))
+    df["runtime"] = df["runtime"].apply(lambda x: str(x))
+
+    df.reset_index(drop=True, inplace=True)
+    df.rename(columns={"user": "User", "runtime": "Total time contributed"}, inplace=True)
+    df["Rank"] = df.index + 1
+    df = df.set_index("Rank")
+    return df
+
+
+def get_global_metrics(serialized_data):
+    current_time = datetime.datetime.utcnow()
+    num_contributing_users = len(serialized_data["points"][0])
+    num_active_users = 0
+    total_runtime = 0
+
+    for user_item in serialized_data["points"][0]:
+        for run in user_item["activeRuns"]:
+            date_run = datetime.datetime.fromisoformat(run["date"])
+            delta_time_sec = (current_time - date_run).total_seconds()
+            if delta_time_sec < MAX_DELTA_ACTIVE_RUN_SEC:
+                num_active_users += 1
+                break
+
+        total_runtime += user_item["runtime"]
+
+    total_runtime = datetime.timedelta(seconds=total_runtime)
+    return {
+        "num_contributing_users": num_contributing_users,
+        "num_active_users": num_active_users,
+        "total_runtime": total_runtime,
+    }

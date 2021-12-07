@@ -5,7 +5,7 @@ import wandb
 
 from dashboard_utils.time_tracker import _log, simple_time_tracker
 
-WANDB_REPO = "learning-at-home/dalle-hivemind"
+WANDB_REPO = st.secrets["WANDB_REPO_MAIN_METRICS"] 
 CACHE_TTL = 100
 
 

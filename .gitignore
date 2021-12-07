@@ -6,4 +6,5 @@ streamlit_observable/frontend/package.json*
 streamlit_observable/frontend/package-lock.json*
 streamlit_observable/frontend/tsconfig.json*
 streamlit_observable/frontend/src/observable_code*
+.streamlit/secrets.toml*
 *__pycache__*

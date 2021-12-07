@@ -1,6 +1,5 @@
 streamlit_observable/frontend/node_modules/*
 streamlit_observable/frontend/public/*
-streamlit_observable/frontend/src/*
 streamlit_observable/frontend/.env*
 streamlit_observable/frontend/.prettierrc*
 streamlit_observable/frontend/package.json*

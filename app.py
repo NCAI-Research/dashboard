@@ -89,7 +89,7 @@ wandb.login(anonymous="must")
 
 
 steps, dates, losses, alive_peers = get_main_metrics()
-source = pd.DataFrame({"steps": steps, "loss": losses, "alive participants": alive_peers, "date": dates})
+source = pd.DataFrame({"steps": steps, "loss": losses, "alive sessions": alive_peers, "date": dates})
 
 
 placeholder_chart_c1_1.vega_lite_chart(
@@ -112,7 +112,7 @@ placeholder_chart_c1_2.vega_lite_chart(
         "mark": {"type": "line", "point": {"tooltip": True, "filled": False, "strokeOpacity": 0}},
         "encoding": {
             "x": {"field": "date", "type": "temporal"},
-            "y": {"field": "alive participants", "type": "quantitative"},
+            "y": {"field": "alive sessions", "type": "quantitative"},
         },
         "config": {"axisX": {"labelAngle": -40}},
     },

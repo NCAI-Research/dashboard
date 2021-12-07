@@ -137,6 +137,7 @@ observable(
     notebook="d/9ae236a507f54046",  # "@huggingface/participants-bubbles-chart",
     targets=["c_noaws"],
     redefine={"serializedData": serialized_data, "profileSimple": profiles, "width": 0},
+    render_empty=True,
 )
 placeholder_chart_c2_3.dataframe(df_leaderboard[["User", "Total time contributed"]])
 

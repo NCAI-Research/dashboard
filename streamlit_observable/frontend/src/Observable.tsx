@@ -22,7 +22,9 @@ class Observable extends StreamlitComponentBase<{}> {
       // TODO handle new notebook
     }
     console.log('this.props.args.redefine: ', this.props.args.redefine);
-    this.redefineCells(this.main, this.props.args.redefine);
+    if (this.main !== null) {
+      this.redefineCells(this.main, this.props.args.redefine);
+    }
   }
 
   async embedNotebook(notebook: string, targets: string[], observe: string[], hide:string[]) {
@@ -111,7 +113,25 @@ class Observable extends StreamlitComponentBase<{}> {
 
   public render = (): ReactNode => {
     
-    console.log('Fucking Console says hi 3 please!');
+    console.log('this.props.args.render_empty: ', this.props.args.render_empty);
+    if (this.props.args.render_empty) {
+      return (
+        <div >
+          <div style={{ padding: '9px 12px' }}>
+            <div ref={this.notebookRef}></div>
+          </div>
+          <div style={{ marginTop: '4px' }}>
+            
+            <div >
+              <div style={{textAlign:"left"}}>{this.props.args.name}</div>
+              <div style={{textAlign:"right"}}>
+              <a href={`https://observablehq.com/${this.props.args.notebook}`} style={{ color: '#666', }}></a>
+              </div>
+            </div>
+          </div>
+        </div >
+      )
+    }
     return (
       <div style={{ border: '1px solid gray', borderRadius: '4px' }}>
         <div style={{ padding: '9px 12px' }}>

@@ -75,6 +75,7 @@ def get_serialized_data_points():
     for run in runs:
         run_summary = run.summary._json_dict
         run_name = run.name
+        state = run.state
 
         if run_name in serialized_data_points:
             if "_timestamp" in run_summary and "_step" in run_summary:
@@ -84,6 +85,7 @@ def get_serialized_data_points():
                         "batches": run_summary["_step"],
                         "runtime": run_summary["_runtime"],
                         "loss": run_summary["train/loss"],
+                        "state": state,
                         "velocity": run_summary["_step"] / run_summary["_runtime"],
                         "date": datetime.datetime.utcfromtimestamp(timestamp),
                     }
@@ -100,6 +102,7 @@ def get_serialized_data_points():
                             "batches": run_summary["_step"],
                             "runtime": run_summary["_runtime"],
                             "loss": run_summary["train/loss"],
+                            "state": state,
                             "velocity": run_summary["_step"] / run_summary["_runtime"],
                             "date": datetime.datetime.utcfromtimestamp(timestamp),
                         }
@@ -123,7 +126,7 @@ def get_serialized_data(serialized_data_points, latest_timestamp):
         batches = 0
         velocity = 0
         for run in serialized_data_point["Runs"]:
-            if run["date"] == latest_timestamp:
+            if run["state"] == "running":
                 run["date"] = run["date"].isoformat()
                 activeRuns.append(run)
                 loss += run["loss"]

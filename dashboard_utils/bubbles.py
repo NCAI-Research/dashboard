@@ -1,9 +1,7 @@
 import datetime
 from concurrent.futures import as_completed
-from requests.adapters import HTTPAdapter
 from urllib import parse
-import requests
-import json
+
 import pandas as pd
 
 import streamlit as st
@@ -68,152 +66,51 @@ def get_profiles(usernames):
 @st.cache(ttl=CACHE_TTL, show_spinner=False)
 @simple_time_tracker(_log)
 def get_serialized_data_points():
-    url = "https://api.wandb.ai/graphql"
+
     api = wandb.Api()
+    runs = api.runs(WANDB_REPO)
 
-    # Get the run ids
-    json_query_run_names = {
-        "operationName":"WandbConfig",
-        "variables":{"limit":100000,"entityName":"learning-at-home","projectName":"dalle-hivemind-trainers","filters":"{\"$and\":[{\"$or\":[{\"$and\":[]}]},{\"$and\":[]},{\"$or\":[{\"$and\":[{\"$or\":[{\"$and\":[]}]},{\"$and\":[{\"name\":{\"$ne\":null}}]}]}]}]}","order":"-state"},
-        "query": """ query WandbConfig($projectName: String!, $entityName: String!, $filters: JSONString, $limit: Int = 100, $order: String) {
-    project(name: $projectName, entityName: $entityName) {
-    id
-    runs(filters: $filters, first: $limit, order: $order) {
-    edges {
-    node {
-    id
-    name
-    __typename
-    }
-    __typename
-    }
-    __typename
-    }
-    __typename
-    }
-    }
-    """}
+    serialized_data_points = {}
+    latest_timestamp = None
+    for run in runs:
+        run_summary = run.summary._json_dict
+        run_name = run.name
+        state = run.state
 
-    s = requests.Session()
-    s.mount(url, HTTPAdapter(max_retries=5))
-
-    resp = s.post(
-        headers={"User-Agent": api.user_agent, "Use-Admin-Privileges": "true", 'content-type': 'application/json'},
-        auth=("api", api.api_key),
-        url=url,
-        data=json.dumps(json_query_run_names)
-    )
-    json_metrics = resp.json()
-    run_names = [run['node']["name"] for run in json_metrics['data']['project']["runs"]['edges']]
-
-    # Get info of each run
-    with FuturesSession() as session:
-        futures = []
-        for run_name in run_names:
-            json_query_by_run = {
-                "operationName":"Run",
-                "variables":{"entityName":"learning-at-home","projectName":"dalle-hivemind-trainers", "runName":run_name},
-                "query":"""query Run($projectName: String!, $entityName: String, $runName: String!) {
-                    project(name: $projectName, entityName: $entityName) {
-                        id
-                        name
-                        createdAt
-                        run(name: $runName) {
-                        id
-                        name
-                        displayName
-                        state
-                        summaryMetrics
-                        runInfo {
-                            gpu
-                            }
-                            __typename
-                        }
-                        __typename
-                        }
+        if run_name in serialized_data_points:
+            if "_timestamp" in run_summary and "_step" in run_summary:
+                timestamp = run_summary["_timestamp"]
+                serialized_data_points[run_name]["Runs"].append(
+                    {
+                        "batches": run_summary["_step"],
+                        "runtime": run_summary["_runtime"],
+                        "loss": run_summary["train/loss"],
+                        "state": state,
+                        "velocity": run_summary["_step"] / run_summary["_runtime"],
+                        "date": datetime.datetime.utcfromtimestamp(timestamp),
                     }
-                    """}
-
-            future = session.post(
-                headers={"User-Agent": api.user_agent, "Use-Admin-Privileges": "true", 'content-type': 'application/json'},
-                auth=("api", api.api_key),
-                url=url,
-                data=json.dumps(json_query_by_run)
-            )
-            futures.append(future)
-        
-        serialized_data_points = {}
-        latest_timestamp = None
-        for future in as_completed(futures):
-            resp = future.result()
-            json_metrics = resp.json()
-
-            data = json_metrics.get("data", None)
-            if data is None:
-                continue
-            
-            project = data.get("project", None)
-            if project is None:
-                continue
-
-            run = project.get("run", None)
-            if run is None:
-                continue
-
-            runInfo = run.get("runInfo", None) 
-            if runInfo is None:
-                gpu_type = None
-            else:
-                gpu_type = runInfo.get("gpu", None)
-
-            summaryMetrics = run.get("summaryMetrics", None)
-            if summaryMetrics is not None:
-                run_summary = json.loads(summaryMetrics)
-
-            state = run.get("state", None)
-            if state is None:
-                continue
-
-            displayName = run.get("displayName", None)
-            if displayName is None:
-                continue
-
-            if displayName in serialized_data_points:
-                if "_timestamp" in run_summary and "_step" in run_summary:
-                    timestamp = run_summary["_timestamp"]
-                    serialized_data_points[displayName]["Runs"].append(
+                )
+                if not latest_timestamp or timestamp > latest_timestamp:
+                    latest_timestamp = timestamp
+        else:
+            if "_timestamp" in run_summary and "_step" in run_summary:
+                timestamp = run_summary["_timestamp"]
+                serialized_data_points[run_name] = {
+                    "profileId": run_name,
+                    "Runs": [
                         {
                             "batches": run_summary["_step"],
                             "runtime": run_summary["_runtime"],
                             "loss": run_summary["train/loss"],
-                            "gpu_type": gpu_type,
                             "state": state,
                             "velocity": run_summary["_step"] / run_summary["_runtime"],
                             "date": datetime.datetime.utcfromtimestamp(timestamp),
                         }
-                    )
-                    if not latest_timestamp or timestamp > latest_timestamp:
-                        latest_timestamp = timestamp
-            else:
-                if "_timestamp" in run_summary and "_step" in run_summary:
-                    timestamp = run_summary["_timestamp"]
-                    serialized_data_points[displayName] = {
-                        "profileId": displayName,
-                        "Runs": [
-                            {
-                                "batches": run_summary["_step"],
-                                "gpu_type": gpu_type,
-                                "state": state,
-                                "runtime": run_summary["_runtime"],
-                                "loss": run_summary["train/loss"],
-                                "velocity": run_summary["_step"] / run_summary["_runtime"],
-                                "date": datetime.datetime.utcfromtimestamp(timestamp),
-                            }
-                        ],
-                    }
-                    if not latest_timestamp or timestamp > latest_timestamp:
-                        latest_timestamp = timestamp
-        latest_timestamp = datetime.datetime.utcfromtimestamp(latest_timestamp)
+                    ],
+                }
+                if not latest_timestamp or timestamp > latest_timestamp:
+                    latest_timestamp = timestamp
+    latest_timestamp = datetime.datetime.utcfromtimestamp(latest_timestamp)
     return serialized_data_points, latest_timestamp
 
 

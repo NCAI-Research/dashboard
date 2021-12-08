@@ -75,8 +75,8 @@ with chart_c2:
     with placeholder_chart_c2_1:
         st_lottie(lottie_loading, height=100, key="loading_c2_1")
     
-    st.write("Chart showing participants of the collaborative-training. Circle radius is relative to the total number of "
-    "processed batches, the profile picture is circled in purple if the participant is active. Every purple square represents an "
+    st.write("Chart showing participants of the collaborative-training. Circle radius is relative to the total time contributed, "
+    "the profile picture is circled in purple if the participant is active. Every purple square represents an "
     "active device.")
 
     st.caption("Leaderboard")

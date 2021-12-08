@@ -137,7 +137,7 @@ def get_serialized_data(serialized_data_points, latest_timestamp):
         new_item = {
             "date": latest_timestamp.isoformat(),
             "profileId": run_name,
-            "batches": batches,
+            "batches": runtime, # "batches": batches quick and dirty fix
             "runtime": runtime,
             "activeRuns": activeRuns,
         }

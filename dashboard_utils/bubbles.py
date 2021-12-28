@@ -36,7 +36,7 @@ def get_new_bubble_data():
 @simple_time_tracker(_log)
 def get_profiles(usernames):
     profiles = []
-    with FuturesSession() as session:
+    with FuturesSession(max_workers=32) as session:
         futures = []
         for username in usernames:
             future = session.get(URL_QUICKSEARCH + parse.urlencode({"type": "user", "q": username}))

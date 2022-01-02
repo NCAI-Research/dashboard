@@ -10,8 +10,7 @@ from requests_futures.sessions import FuturesSession
 
 from dashboard_utils.time_tracker import _log, simple_time_tracker
 
-EXCLUDED_PROFILES = {'borzunov', 'justheuristic', 'mryab', 'yhn112', 'SaulLu',
-                     'training-transformers-together-machine', 'Upload'}
+EXCLUDED_PROFILES = {'borzunov', 'justheuristic', 'training-transformers-together-machine'}
 URL_QUICKSEARCH = "https://huggingface.co/api/quicksearch?"
 WANDB_REPO = st.secrets["WANDB_REPO_INDIVIDUAL_METRICS"]  
 CACHE_TTL = 100

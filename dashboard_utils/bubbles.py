@@ -10,7 +10,6 @@ from requests_futures.sessions import FuturesSession
 
 from dashboard_utils.time_tracker import _log, simple_time_tracker
 
-EXCLUDED_PROFILES = {'borzunov', 'justheuristic', 'training-transformers-together-machine'}
 URL_QUICKSEARCH = "https://huggingface.co/api/quicksearch?"
 WANDB_REPO = st.secrets["WANDB_REPO_INDIVIDUAL_METRICS"]  
 CACHE_TTL = 100
@@ -74,11 +73,8 @@ def get_serialized_data_points():
     serialized_data_points = {}
     latest_timestamp = None
     for run in runs:
-        run_name = run.name
-        if run_name in EXCLUDED_PROFILES:
-            continue
-                        
         run_summary = run.summary._json_dict
+        run_name = run.name
         state = run.state
 
         if run_name in serialized_data_points:

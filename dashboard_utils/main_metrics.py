@@ -14,14 +14,14 @@ CACHE_TTL = 100
 def get_main_metrics():
     api = wandb.Api()
     run = api.run(WANDB_RUN_URL)
-    history = run.scan_history(keys=["step", "loss", "alive peers", "_timestamp"])
+    history = run.scan_history(keys=["optimizer_step", "loss", "alive peers", "_timestamp"])
 
     steps = []
     losses = []
     alive_peers = []
     dates = []
     for row in history:
-        steps.append(row["step"])
+        steps.append(row["optimizer_step"])
         losses.append(row["loss"])
         alive_peers.append(row["alive peers"])
         dates.append(datetime.datetime.utcfromtimestamp(row["_timestamp"]))
